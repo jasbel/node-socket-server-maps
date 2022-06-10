@@ -7,7 +7,7 @@ class Sockets {
 
         this.io = io;
 
-        this.marker = new Markers();
+        this.markers = new Markers();
         
         this.socketEvents();
     }
@@ -15,15 +15,22 @@ class Sockets {
     socketEvents() {
         // On connection
         this.io.on('connection', ( socket ) => {
+            console.log({newUser: socket.id});
 
-            console.log('Cliente conectado', socket)
-            // Escuchar evento: mensaje-to-server
-            socket.on('mensaje-to-server', ( data ) => {
-                console.log( data );
+            socket.emit('markers-actives', this.markers.actives)
+
+            socket.on('marker-new', (marker) => {
+                console.log({markerNew: marker});
+                this.markers.addMarker(marker);
                 
-                this.io.emit('mensaje-from-server', data );
-            });
-            
+                socket.broadcast.emit('marker-new', marker);
+
+            })
+
+            socket.on('marker-move', (marker) => {
+                this.markers.updateMarker(marker);
+                socket.broadcast.emit('marker-move', marker);
+            })
         
         });
     }
